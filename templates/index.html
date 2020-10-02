@@ -1,0 +1,137 @@
+<!-- ./templates/index.html -->
+<html>
+<head>
+  <!-- link to the ToDo MVC index.css file -->
+  <link rel="stylesheet" href="/static/todomvc-app-css/index.css">
+  <title>Realtime Amazon Inventory</title>
+</head>
+
+<body>
+  <section >
+    <header class="header">
+      <h1>Amazon Inventory</h1>
+    </header>
+    
+    <section>
+      <table class="styled-table">
+        <div>
+          <tr><th>Import to Shopify</th><th>Image</th><th>Name</th><th>SKU</th><th>ASIN</th><th>QUANTITY</th><th>PRICE</th><th></th></tr>
+        </div>
+      </table>
+    </section>
+    
+  </section>
+
+  <script src="https://js.pusher.com/4.1/pusher.min.js"></script>
+  <script>
+    // Enable pusher logging for debugging - don't include this in production
+    // function that makes API call to add an item
+    function addItem(data) {
+      // if enter key is pressed on the form input, add new item
+      let item = document.querySelector('.new-todo');
+      fetch('/add-todo', {
+        method: 'post',
+        body: JSON.stringify(data)
+      })
+      .then(resp => {
+        // empty form input once a response is received
+        item.value = ""
+      });
+    }
+
+    // function that makes API call to remove an item
+    function removeItem(id) {
+      fetch(`/remove-todo/${id}`);
+    }
+
+  window.onload = function() {
+      console.log('wtf')
+        fetch('/items', {
+          method: 'get'
+        })
+        .then(resp => {
+          // empty form input once a response is received
+          console.log(resp)
+          return resp.json()
+        })
+        .then(resp => {
+          // empty form input once a response is received
+          console.log(resp)
+          for(item in resp){
+            console.log(item)
+            appendToList(resp[item])
+          }
+          return resp
+        });
+};
+
+    // function that makes API call to update an item 
+    // toggles the state of the item between complete and
+    // incomplete states
+    function toggleComplete(elem) {
+      let id = elem.dataset.id,
+      completed = (elem.dataset.completed == "1" ? "0" : "1");
+      fetch(`/update-todo/${id}`, {
+        method: 'post',
+        body: JSON.stringify({ completed })
+      });
+    }
+    
+    // helper function to append new ToDo item to current ToDo list
+    function appendToList(data) {
+      console.log(data)
+      let html = `
+      <tr >
+        <th>
+          <div>
+            <input class="toggle" type="checkbox" onclick="toggleComplete(this)" 
+            data-completed="${data.completed}" data-id="${data.id}">
+          </div>
+        </th>
+        <th>
+          <div>
+          <img src="${data['SmallImage']}" >
+          </div>
+        </th>
+        <th>
+          <div>
+            <label>${data['item-name']}</label>
+          </div>
+        </th>
+        <th>
+          <div class="view">
+            <label>${data['seller-sku']}</label>
+          </div>
+        </th>
+        <th>
+          <div class="view">
+            <label>${data['asin1']}</label>
+          </div>
+        </th>
+        <th>
+          <div class="view">
+            <label>${data['quantity']}</label>
+          </div>
+        </th>
+        <th>
+          <div class="view">
+            <label>${data['price']}</label>
+          </div>
+
+        </th>        
+        <th>
+          <button id="${data['seller-sku']}">
+            Send to Shopify
+          </button>
+
+        </th>
+      </tr>`;
+      let list = document.querySelector(".styled-table")
+      list.innerHTML += html;
+      document.getElementById(data['seller-sku']).onclick = function(){
+        addItem(data)
+      };
+    };
+  </script>
+</body>
+</html>
