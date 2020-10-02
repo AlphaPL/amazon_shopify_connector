@@ -45,5 +45,5 @@ def updateTodo(item_id):
   #pusher.trigger('todo', 'item-updated', data)
   return jsonify(data)
 
-# run Flask app in debug mode
-app.run(use_reloader=False, host='0.0.0.0', port=3000)
+if __name__ == "__main__":
+  app.run(use_reloader=False, host='0.0.0.0', port=3000)
