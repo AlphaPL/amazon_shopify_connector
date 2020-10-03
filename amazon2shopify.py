@@ -1,11 +1,13 @@
 import mws, os
 import os
 import requests
+import base64
+import requests
 # access key AKIAJWDGQRGP3ETCKTVA
 # client secret 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
 # seller id A3TUGG788NOEF7
 cached_records = []
-def get_products():
+def get_products(region, marketplace):
   global cached_records
   try:
     orders_api = mws.Reports(
@@ -14,13 +16,11 @@ def get_products():
          account_id='A3TUGG788NOEF7',
          region='UK'
     )
-    region2market = {}
-    region2market['UK'] = 'A1F83G8C2ARO7P'
     products_api = mws.Products(
          access_key='AKIAJWDGQRGP3ETCKTVA',
          secret_key='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',
          account_id='A3TUGG788NOEF7',
-         region='UK'
+         region=region
     )
     print(orders_api.get_service_status().original)
     for i in (orders_api.get_report_request_list().parsed['ReportRequestInfo']):
@@ -37,7 +37,7 @@ def get_products():
       if i:
         for idx, j in enumerate(i.split('\t')):
           record[columns[idx]] = j
-        record['SmallImage'] = products_api.get_matching_product(region2market['UK'], [record['asin1']]).parsed['Product']['AttributeSets']['ItemAttributes']['SmallImage']['URL']['value']
+        record['SmallImage'] = products_api.get_matching_product(marketplace, [record['asin1']]).parsed['Product']['AttributeSets']['ItemAttributes']['SmallImage']['URL']['value']
         records += [record]
     cached_records = records
     return records
@@ -52,8 +52,14 @@ def get_products():
 
 def create_product(data):
       print('Adding product', data)
+      url = data['SmallImage']
+      url = url[:url.rfind('.')]
+      url = url[:url.rfind('.')]
+      url = url+".jpg"
+      print(url)
       payload =   {"product": {
         "title": data['item-name'],
+        "body_html": data['description'],
         "variants": [
         {
           "price": data['price'],
@@ -61,17 +67,7 @@ def create_product(data):
         }],
         "images": [
           {
-            "id": 850703190,
-            "product_id": 632910392,
-            "position": 1,
-            "created_at": "2018-01-08T12:34:47-05:00",
-            "updated_at": "2018-01-08T12:34:47-05:00",
-            "width": 110,
-            "height": 140,
-            "src": data['SmallImage'],
-            "variant_ids": [
-              {}
-            ]
+            "attachment":  str(base64.b64encode(requests.get(url).content))[2:-1]
           }
         ]
       }}
@@ -80,6 +76,6 @@ def create_product(data):
 
       r = requests.post("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products.json", json=payload, headers=headers)
 
-      print(r)
+      print(r.content)
 
 #create_product()

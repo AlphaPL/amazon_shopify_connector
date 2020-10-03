@@ -12,10 +12,35 @@
       <h1>Amazon Inventory</h1>
     </header>
     
+<div class="custom-select" id='country' style="width:200px;">
+  <select>
+    <option value="GB">UK</option>
+    <option value="BR">Brazil</option>
+    <option value="CA">Canada</option>
+    <option value="MX">Mexico</option>
+    <option value="US">United States</option>
+    <option value="AE">United Arab Emirates </option>
+    <option value="DE">Germany</option>
+    <option value="EG">Egypt</option>
+    <option value="ES">Spain</option>
+    <option value="FR">France</option>
+    <option value="IN">India</option>
+    <option value="IT">Italy</option>
+    <option value="NL">Toyota</option>
+    <option value="SA">Saudi Arabia</option>
+    <option value="SE">Sweden</option>
+    <option value="TR">Turkey</option>
+    <option value="SG">Singapore</option>
+    <option value="AU">Australia</option>
+    <option value="JP">Japan</option>
+
+  </select>
+</div>
+
     <section>
       <table class="styled-table">
         <div>
-          <tr><th>Import to Shopify</th><th>Image</th><th>Name</th><th>SKU</th><th>ASIN</th><th>QUANTITY</th><th>PRICE</th><th></th></tr>
+          <tr><th></th><th>Image</th><th>Name</th><th>SKU</th><th>ASIN</th><th>QUANTITY</th><th>PRICE</th><th>Description</th><th></th></tr>
         </div>
       </table>
     </section>
@@ -46,7 +71,8 @@
 
   window.onload = function() {
       console.log('wtf')
-        fetch('/items', {
+      console.log(document.getElementById("country"))
+        fetch('/items?'+ "UK", {
           method: 'get'
         })
         .then(resp => {
@@ -63,6 +89,47 @@
           }
           return resp
         });
+
+        fetch('/get_mapping', {
+          method: 'get'
+        })
+        .then(resp => {
+          // empty form input once a response is received
+          console.log('mapping', resp)
+          return resp.json()
+        })
+        .then(resp => {
+          // empty form input once a response is received
+          console.log(resp)
+          for(item in resp){
+            console.log(item)
+          }
+          return resp
+        });
+
+        document.getElementById('country').onchange = function(e){
+          document.querySelector(".styled-table").innerHTML = ""
+          document.querySelector(".styled-table").innerHTML += "<tr><th>Import to Shopify</th><th>Image</th><th>Name</th><th>SKU</th><th>ASIN</th><th>QUANTITY</th><th>PRICE</th><th>Description</th><th></th></tr>";
+          var strUser = e.target.options[e.target.selectedIndex].value;
+          console.log('dulut', event)
+          fetch('/items?' + strUser, {
+            method: 'get'
+          })
+          .then(resp => {
+            // empty form input once a response is received
+            console.log(resp)
+            return resp.json()
+          })
+          .then(resp => {
+            // empty form input once a response is received
+            console.log(resp)
+            for(item in resp){
+              console.log(item)
+              appendToList(resp[item])
+            }
+            return resp
+          });
+        }; 
 };
 
     // function that makes API call to update an item 
@@ -118,9 +185,15 @@
             <label>${data['price']}</label>
           </div>
 
-        </th>        
+        </th>
         <th>
-          <button id="${data['seller-sku']}">
+          <div class="view">
+            <label>${data['description']}</label>
+          </div>
+
+        </th>         
+        <th>
+          <button class="button1" id="${data['seller-sku']}">
             Send to Shopify
           </button>
 
