@@ -111,7 +111,7 @@ def create_product(data):
       url = url[:url.rfind('.')]
       url = url+".jpg"
       payload =   {"product": {
-        "title": data['item-name'] +" | Available " + data['restock-date'] if 'restock-date' in data else data['item-name'],
+        "title": data['item-name'] +" | Available " + data['restock-date'] if 'restock-date' in data and data['quantity'] == '' else data['item-name'],
         "handle": data['handle'],
         "body_html": data['description']['short_description'],
         "tags":data['restock-date']  if 'restock-date' in data else '',
@@ -137,6 +137,7 @@ def create_product(data):
       else:
         print(data['item-name'], 'Not Exists! Sending new')
         r = requests.post("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products.json", json=payload, headers=headers)
-        r = requests.put("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products/"+str(get_prod_id(data))+".json", json=payload, headers=headers)
+        for i in range(5):
+          r = requests.put("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products/"+str(get_prod_id(data))+".json", json=payload, headers=headers)
 
 #create_product()
