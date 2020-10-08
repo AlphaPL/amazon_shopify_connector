@@ -47,7 +47,7 @@ def get_products(region, marketplace):
         record['handle'] =  ''.join(([c for c in record['item-name'].lower() if c.isalnum()])) 
         record['in-shopify'] = bool(get_prod_id(record))
         data = get_prod(record)
-        if '|' in data['title']:
+        if data and '|' in data['title']:
           record['restock-date'] = data['title'][data['title'].rfind(' ') + 1:]
         records += [record]
     cached_records = records
