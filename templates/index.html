@@ -40,7 +40,7 @@
     <section>
       <table class="styled-table">
         <div>
-          <tr><th></th><th>Image</th><th>Name</th><th>SKU</th><th>ASIN</th><th>QUANTITY</th><th>PRICE</th><th>Description</th><th></th></tr>
+          <tr><th></th><th>Image</th><th>Name</th><th>SKU</th><th>ASIN</th><th>QUANTITY</th><th>PRICE</th><th>In Shopify</th><th></th></tr>
         </div>
       </table>
     </section>
@@ -54,6 +54,15 @@
     function addItem(data) {
       // if enter key is pressed on the form input, add new item
       let item = document.querySelector('.new-todo');
+      console.log(data['asin1'])
+      try {
+        data['restock-date'] = document.getElementById('input'+data['asin1']).value
+      } catch (error) {
+        console.error(error);
+        // expected output: ReferenceError: nonExistentFunction is not defined
+        // Note - error messages will vary depending on browser
+      }
+
       fetch('/add-todo', {
         method: 'post',
         body: JSON.stringify(data)
@@ -87,8 +96,15 @@
             console.log(item)
             appendToList(resp[item])
           }
+            for(item in resp){
+              console.log(item)
+              addEvent(resp[item])
+            }
           return resp
+        }).catch(error => {
+          alert('Error, refresh website:', error);
         });
+
 
         fetch('/get_mapping', {
           method: 'get'
@@ -127,7 +143,14 @@
               console.log(item)
               appendToList(resp[item])
             }
+            for(item in resp){
+              console.log(item)
+              addEvent(resp[item])
+            }
+
             return resp
+          }).catch(error => {
+            alert('Error, refresh website:', error);
           });
         }; 
 };
@@ -151,8 +174,6 @@
       <tr >
         <th>
           <div>
-            <input class="toggle" type="checkbox" onclick="toggleComplete(this)" 
-            data-completed="${data.completed}" data-id="${data.id}">
           </div>
         </th>
         <th>
@@ -185,13 +206,10 @@
             <label>${data['price']}</label>
           </div>
 
-        </th>
+        </th>  
         <th>
-          <div class="view">
-            <label>${data['description']}</label>
-          </div>
-
-        </th>         
+          ${data['quantity'] == '' ? (data['in-shopify'] + '<br/>Set restock date <br/> <input type="text" value="' + data['restock-date']+ '" id="input' + data['asin1'] + '"> </text>') : data['in-shopify'] }
+        </th>     
         <th>
           <button class="button1" id="${data['seller-sku']}">
             Send to Shopify
@@ -201,9 +219,15 @@
       </tr>`;
       let list = document.querySelector(".styled-table")
       list.innerHTML += html;
+    };
+
+    // helper function to append new ToDo item to current ToDo list
+    function addEvent(data) {
+
       document.getElementById(data['seller-sku']).onclick = function(){
         addItem(data)
       };
+      console.log('added event', data['seller-sku'])
     };
   </script>
 </body>

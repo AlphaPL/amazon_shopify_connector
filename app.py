@@ -7,6 +7,7 @@ import amazon2shopify
 import amazon
 import searchresults
 from flask import request
+from flask_apscheduler import APScheduler
 # create flask app
 app = Flask(__name__)
 
@@ -21,7 +22,7 @@ def index():
 def addTodo():
 
   data = json.loads(request.data.decode()) # load JSON data from request
-  print(data)
+  data['description'] = amazon.scrape("https://www.amazon.com/"+ searchresults.scrape("https://www.amazon.com/s?k="+data['item-name'])['products'][0]['url'])
   amazon2shopify.create_product(data)
   #pusher.trigger('todo', 'item-added', data) # trigger `item-added` event on `todo` channel
   return {}
@@ -36,10 +37,7 @@ def get_items():
   mapping = {}
   for line in f.readlines():
     mapping[ line.split()[1]] = (line.split()[2], line.split()[3])
-  print(mapping)
   for i in amazon2shopify.get_products(region, mapping[region][1]):
-    i['description'] = amazon.scrape("https://www.amazon.com/"+ searchresults.scrape("https://www.amazon.com/s?k="+i['item-name'])['products'][0]['url'])['short_description']
-    print(i)
     result += [i]
   return jsonify(result)
 
@@ -53,7 +51,6 @@ def removeTodo(item_id):
 @app.route('/get_mapping')
 def get_mapping():
   data = { }
-  print('wtf')
   f = open("mappings.json", "r")
   mapping = {}
   for line in f.readlines():
@@ -72,4 +69,7 @@ def updateTodo(item_id):
   return jsonify(data)
 
 if __name__ == "__main__":
+  scheduler = APScheduler()
+  scheduler.add_job(func=amazon2shopify.fetch_report, args=[], trigger='interval', id='job', minutes=15)
+  scheduler.start()
   app.run(use_reloader=True, host='0.0.0.0', port=3000)
