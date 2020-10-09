@@ -70,6 +70,9 @@
       .then(resp => {
         // empty form input once a response is received
         alert("Item imported!")
+        let x = document.getElementById(data['seller-sku'])
+        console.log(x)
+        x.style.visibility='visible';
       });
     }
 
@@ -225,7 +228,12 @@
     function addEvent(data) {
 
       document.getElementById(data['seller-sku']).onclick = function(){
+        let x = document.getElementById(data['seller-sku'])
+        console.log(x)
+        x.style.visibility='hidden';
         addItem(data)
+       
+
       };
       console.log('added event', data['seller-sku'])
     };

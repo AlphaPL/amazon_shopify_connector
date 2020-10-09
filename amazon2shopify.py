@@ -5,7 +5,7 @@ import base64
 import requests
 from flask_apscheduler import APScheduler
 from flask import jsonify
-
+import pickle
 import datetime
 import amazon
 import searchresults
@@ -51,11 +51,16 @@ def get_products(region, marketplace):
           record['restock-date'] = data['title'][data['title'].rfind(' ') + 1:]
         records += [record]
     cached_records = records
+    afile = open('records', 'wb')
+    pickle.dump(records, afile)
+    afile.close()
     return records
   except mws.mws.MWSError as e:
     import traceback
+    file2 = open('records', 'rb')
+    new_d = pickle.load(file2)
     traceback.print_exc()
-    raise "MWS Throttled"
+    return new_d
 
 def get_mapping():
           #test code

@@ -70,6 +70,6 @@ def updateTodo(item_id):
 
 if __name__ == "__main__":
   scheduler = APScheduler()
-  scheduler.add_job(func=amazon2shopify.fetch_report, args=[], trigger='interval', id='job', minutes=15)
+  scheduler.add_job(func=amazon2shopify.fetch_report, args=[], trigger='interval', id='job', minutes=5)
   scheduler.start()
   app.run(use_reloader=True, host='0.0.0.0', port=3000)
