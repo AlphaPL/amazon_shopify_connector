@@ -82,7 +82,7 @@ def fetch_report():
         products = get_products(r, mapping[r][1])
         print('fetched products', products)
         for product in products:
-          product['country_of_origin'] = mapping[r][0]
+          product['country_of_origin'] = r
           product['description'] = amazon.scrape("https://www.amazon.com/"+ searchresults.scrape("https://www.amazon.com/s?k="+product['item-name'])['products'][0]['url'])
           print('Inserting product', product)
           create_product(product)
