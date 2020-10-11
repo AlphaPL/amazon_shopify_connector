@@ -13,7 +13,7 @@
     </header>
     
 <div class="custom-select" id='country' style="width:200px;">
-  <select>
+  <select id='country_val'>
     <option value="UK">UK</option>
     <option value="BR">Brazil</option>
     <option value="CA">Canada</option>
@@ -54,7 +54,11 @@
     function addItem(data) {
       // if enter key is pressed on the form input, add new item
       let item = document.querySelector('.new-todo');
-      console.log(data['asin1'])
+      let e = document.getElementById('country_val');
+      console.log(e)
+      var strUser = e.options[e.selectedIndex].value;
+      data['country_of_origin'] = strUser
+      console.log(strUser)
       try {
         data['restock-date'] = document.getElementById('input'+data['asin1']).value
       } catch (error) {

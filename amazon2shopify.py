@@ -105,9 +105,21 @@ def get_prod_id(data):
 def get_prod(data):
       r = requests.get("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products.json?handle="+data['handle'])
       for pro in r.json()['products']:
+        print('AREK', pro)
         return pro
       return False
 
+def update_variant(data, country):
+  if country == 'UK':
+    country = 'GB'
+  headers = {"Accept": "application/json", "Content-Type": "application/json"}
+  for variant in data['variants']:
+      r = requests.get("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-10/inventory_items/" + str(variant["inventory_item_id"]) + ".json" )
+      payload = r.json()
+      payload['inventory_item']['country_code_of_origin'] = country
+      print(payload)
+      r = requests.put("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-10/inventory_items/" + str(variant["inventory_item_id"]) + ".json", json=payload, headers=headers )
+      print(r.content)
 
 def create_product(data):
       print("Importing product", data['item-name'])
@@ -138,11 +150,17 @@ def create_product(data):
       headers = {"Accept": "application/json", "Content-Type": "application/json"}
       if get_prod_id(data):
         print(data['item-name'], 'Exists! Updateing')
-        r = requests.put("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products/"+str(get_prod_id(data))+".json", json=payload, headers=headers)
+        #r = requests.put("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products/"+str(get_prod_id(data))+".json", json=payload, headers=headers)
+        import time
+        time.sleep(5)
+        update_variant(get_prod(data), data['country_of_origin'])
       else:
         print(data['item-name'], 'Not Exists! Sending new')
         r = requests.post("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products.json", json=payload, headers=headers)
         for i in range(5):
           r = requests.put("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products/"+str(get_prod_id(data))+".json", json=payload, headers=headers)
+        import time
+        time.sleep(5)
+        update_variant(get_prod(data), data['country_of_origin'])
 
 #create_product()
