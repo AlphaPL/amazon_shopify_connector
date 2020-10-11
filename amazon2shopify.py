@@ -78,7 +78,11 @@ def fetch_report():
       try:
         print(r)
         print('Importing records from', r, mapping[r][1])
-        for product in get_products(r, mapping[r][1]):
+
+        products = get_products(r, mapping[r][1])
+        print('fetched products', products)
+        for product in products:
+          product['country_of_origin'] = mapping[r][0]
           product['description'] = amazon.scrape("https://www.amazon.com/"+ searchresults.scrape("https://www.amazon.com/s?k="+product['item-name'])['products'][0]['url'])
           print('Inserting product', product)
           create_product(product)
@@ -88,7 +92,9 @@ def fetch_report():
                account_id='A3TUGG788NOEF7',
                region='UK')
           orders_api.request_report('_GET_MERCHANT_LISTINGS_ALL_DATA_')
-      except:
+      except Exception as e:
+        import traceback
+        traceback.print_exc()
         pass
 
 
@@ -105,11 +111,11 @@ def get_prod_id(data):
 def get_prod(data):
       r = requests.get("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products.json?handle="+data['handle'])
       for pro in r.json()['products']:
-        print('AREK', pro)
         return pro
       return False
 
 def update_variant(data, country):
+  print('Updating variant for', data, country)
   if country == 'UK':
     country = 'GB'
   headers = {"Accept": "application/json", "Content-Type": "application/json"}
@@ -150,7 +156,7 @@ def create_product(data):
       headers = {"Accept": "application/json", "Content-Type": "application/json"}
       if get_prod_id(data):
         print(data['item-name'], 'Exists! Updateing')
-        #r = requests.put("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products/"+str(get_prod_id(data))+".json", json=payload, headers=headers)
+        r = requests.put("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products/"+str(get_prod_id(data))+".json", json=payload, headers=headers)
         import time
         time.sleep(5)
         update_variant(get_prod(data), data['country_of_origin'])
