@@ -13,7 +13,7 @@ import searchresults
 # client secret nQY7q21eUiKwbo3PGc7ngUTvQ+Vd9yDXAUnHQCaT
 # seller id A3TUGG788NOEF7
 cached_records = []
-def get_products(region, marketplace):
+def get_products(region, marketplace, pageNum, prodname):
   global cached_records
   print(region, marketplace)
   #fetch_report()
@@ -33,23 +33,40 @@ def get_products(region, marketplace):
     for i in (orders_api.get_report_request_list(types=['_GET_MERCHANT_LISTINGS_ALL_DATA_']).parsed['ReportRequestInfo']):
       if(i['ReportType']['value'] == '_GET_MERCHANT_LISTINGS_ALL_DATA_'):
         report_id = i['GeneratedReportId']['value']
-    report_lines = ((orders_api.get_report(report_id).parsed).decode().split('\n'))
+    print()
+    report_lines = ((orders_api.get_report(report_id).parsed).decode('latin1').split('\n'))
     columns = {}
     for idx, column in enumerate(report_lines[0].strip().split('\t')):
       columns[idx] = column.strip().replace('\ufeff','')
     records = []
-    for i in report_lines[1:]:
-      record = {}
-      if i:
-        for idx, j in enumerate(i.split('\t')):
-          record[columns[idx]] = j.strip().replace('\ufeff','')
-        record['SmallImage'] = products_api.get_matching_product(marketplace, [record['asin1']]).parsed['Product']['AttributeSets']['ItemAttributes']['SmallImage']['URL']['value']
-        record['handle'] =  ''.join(([c for c in record['item-name'].lower() if c.isalnum()])) 
-        record['in-shopify'] = bool(get_prod_id(record))
-        data = get_prod(record)
-        if data and '|' in data['title']:
-          record['restock-date'] = data['title'][data['title'].rfind(' ') + 1:]
-        records += [record]
+    if prodname == '':
+      for i in report_lines[(pageNum-1)*10+1:pageNum*10]:
+        print(i)
+        record = {}
+        if i:
+          for idx, j in enumerate(i.split('\t')):
+            record[columns[idx]] = j.strip().replace('\ufeff','')
+          record['SmallImage'] = products_api.get_matching_product(marketplace, [record['asin1']]).parsed['Product']['AttributeSets']['ItemAttributes']['SmallImage']['URL']['value']
+          record['handle'] =  ''.join(([c for c in record['item-name'].lower() if c.isalnum()])) 
+          record['in-shopify'] = bool(get_prod_id(record))
+          data = get_prod(record)
+          if data and '|' in data['title']:
+            record['restock-date'] = data['title'][data['title'].rfind(' ') + 1:]
+          records += [record]
+    else:
+      for i in report_lines[1:]:
+        print(i)
+        record = {}
+        if i and prodname in i:
+          for idx, j in enumerate(i.split('\t')):
+            record[columns[idx]] = j.strip().replace('\ufeff','')
+          record['SmallImage'] = products_api.get_matching_product(marketplace, [record['asin1']]).parsed['Product']['AttributeSets']['ItemAttributes']['SmallImage']['URL']['value']
+          record['handle'] =  ''.join(([c for c in record['item-name'].lower() if c.isalnum()])) 
+          record['in-shopify'] = bool(get_prod_id(record))
+          data = get_prod(record)
+          if data and '|' in data['title']:
+            record['restock-date'] = data['title'][data['title'].rfind(' ') + 1:]
+          records += [record]
     cached_records = records
     afile = open('records', 'wb')
     pickle.dump(records, afile)
@@ -101,17 +118,19 @@ def fetch_report():
 
 
 def get_prod_id(data):
-      r = requests.get("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products.json?handle="+data['handle'])
+      r = requests.get("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products.json")
       for pro in r.json()['products']:
-        return pro['id']
+        if pro['handle'] == data['handle']:
+          return pro['id']
       return False
 
 
 
 def get_prod(data):
-      r = requests.get("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products.json?handle="+data['handle'])
+      r = requests.get("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products.json")
       for pro in r.json()['products']:
-        return pro
+        if pro['handle'] == data['handle']:
+          return pro
       return False
 
 def update_variant(data, country):

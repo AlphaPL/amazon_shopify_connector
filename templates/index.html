@@ -11,7 +11,7 @@
     <header class="header">
       <h1>Amazon Inventory</h1>
     </header>
-    
+
 <div class="custom-select" id='country' style="width:200px;">
   <select id='country_val'>
     <option value="UK">UK</option>
@@ -36,7 +36,9 @@
 
   </select>
 </div>
-
+    <button id="prevPage"> Prev Page </button>
+    <button id="nextPage"> Next Page</button>
+    <input type="text" id="name" placeholder="Type in specific product"> </input>
     <section>
       <table class="styled-table">
         <div>
@@ -49,6 +51,7 @@
 
   <script src="https://js.pusher.com/4.1/pusher.min.js"></script>
   <script>
+    let pageNum = 1
     // Enable pusher logging for debugging - don't include this in production
     // function that makes API call to add an item
     function addItem(data) {
@@ -58,7 +61,7 @@
       console.log(e)
       var strUser = e.options[e.selectedIndex].value;
       data['country_of_origin'] = strUser
-      console.log(strUser)
+      console.log(strUser, pageNum)
       try {
         data['restock-date'] = document.getElementById('input'+data['asin1']).value
       } catch (error) {
@@ -85,10 +88,8 @@
       fetch(`/remove-todo/${id}`);
     }
 
-  window.onload = function() {
-      console.log('wtf')
-      console.log(document.getElementById("country"))
-        fetch('/items?'+ "UK", {
+    function fetchProducts(country, pageNum, prodname) {
+        fetch('/items?country='+ country+"&pageNum="+pageNum+"&prodname="+prodname, {
           method: 'get'
         })
         .then(resp => {
@@ -111,6 +112,12 @@
         }).catch(error => {
           alert('Error, refresh website:', error);
         });
+    }
+
+  window.onload = function() {
+      console.log('wtf')
+      console.log(document.getElementById("country"))
+      fetchProducts("UK", pageNum, '')
 
 
         fetch('/get_mapping', {
@@ -135,31 +142,42 @@
           document.querySelector(".styled-table").innerHTML += "<tr><th>Import to Shopify</th><th>Image</th><th>Name</th><th>SKU</th><th>ASIN</th><th>QUANTITY</th><th>PRICE</th><th>Description</th><th></th></tr>";
           var strUser = e.target.options[e.target.selectedIndex].value;
           console.log('dulut', event)
-          fetch('/items?' + strUser, {
-            method: 'get'
-          })
-          .then(resp => {
-            // empty form input once a response is received
-            console.log(resp)
-            return resp.json()
-          })
-          .then(resp => {
-            // empty form input once a response is received
-            console.log(resp)
-            for(item in resp){
-              console.log(item)
-              appendToList(resp[item])
-            }
-            for(item in resp){
-              console.log(item)
-              addEvent(resp[item])
-            }
-
-            return resp
-          }).catch(error => {
-            alert('Error, refresh website:', error);
-          });
+          fetchProducts(strUser, pageNum, '')
         }; 
+        console.log('Setting onclick for prevpage')
+        console.log(document.getElementById("prevPage"))
+        document.getElementById("prevPage").onclick = function(ev) {
+          document.querySelector(".styled-table").innerHTML = ""
+          document.querySelector(".styled-table").innerHTML += "<tr><th>Import to Shopify</th><th>Image</th><th>Name</th><th>SKU</th><th>ASIN</th><th>QUANTITY</th><th>PRICE</th><th>Description</th><th></th></tr>";
+          console.log('wtf')
+          pageNum = pageNum - 1
+          let e = document.getElementById('country_val');
+          console.log(e)
+          var strUser = e.options[e.selectedIndex].value;
+          fetchProducts(strUser, pageNum)
+        }
+        console.log('Setting onclick for nextPage')
+
+        document.getElementById("nextPage").onclick = function(ev) {
+          document.querySelector(".styled-table").innerHTML = ""
+          document.querySelector(".styled-table").innerHTML += "<tr><th>Import to Shopify</th><th>Image</th><th>Name</th><th>SKU</th><th>ASIN</th><th>QUANTITY</th><th>PRICE</th><th>Description</th><th></th></tr>";
+          console.log('wtf')
+          pageNum = pageNum + 1
+          let e = document.getElementById('country_val');
+          console.log(e)
+          var strUser = e.options[e.selectedIndex].value;
+          fetchProducts(strUser, pageNum)
+        }
+
+        document.getElementById("name").onchange = function(ev) {
+          document.querySelector(".styled-table").innerHTML = ""
+          document.querySelector(".styled-table").innerHTML += "<tr><th>Import to Shopify</th><th>Image</th><th>Name</th><th>SKU</th><th>ASIN</th><th>QUANTITY</th><th>PRICE</th><th>Description</th><th></th></tr>";
+          console.log(ev.target.value)
+          let e = document.getElementById('country_val');
+          console.log(e)
+          var strUser = e.options[e.selectedIndex].value;
+          fetchProducts(strUser, pageNum, ev.target.value)
+        }
 };
 
     // function that makes API call to update an item 

@@ -29,7 +29,9 @@ def addTodo():
 
 @app.route('/items', methods = ['GET'])
 def get_items():
-  region = (request.query_string.decode())
+  region = request.args.get('country')
+  pageNum = int(request.args.get('pageNum'))
+  prodName = (request.args.get('prodname'))
   #pusher.trigger('todo', 'item-added', data) # trigger `item-added` event on `todo` channel
   result = []
   mapping = get_mapping()
@@ -37,7 +39,7 @@ def get_items():
   mapping = {}
   for line in f.readlines():
     mapping[ line.split()[1]] = (line.split()[2], line.split()[3])
-  for i in amazon2shopify.get_products(region, mapping[region][1]):
+  for i in amazon2shopify.get_products(region, mapping[region][1], pageNum, prodName):
     result += [i]
   return jsonify(result)
 
@@ -70,7 +72,7 @@ def updateTodo(item_id):
 
 if __name__ == "__main__":
   scheduler = APScheduler()
-  scheduler.add_job(func=amazon2shopify.fetch_report, args=[], trigger='interval', id='job', minutes=15)
+  #scheduler.add_job(func=amazon2shopify.fetch_report, args=[], trigger='interval', id='job', minutes=15)
   #amazon2shopify.fetch_report()
   scheduler.start()
   app.run(use_reloader=True, host='0.0.0.0', port=3000)
