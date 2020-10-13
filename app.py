@@ -23,6 +23,7 @@ def addTodo():
 
   data = json.loads(request.data.decode()) # load JSON data from request
   data['description'] = amazon.scrape("https://www.amazon.com/"+ searchresults.scrape("https://www.amazon.com/s?k="+data['item-name'])['products'][0]['url'])
+  print(data)
   amazon2shopify.create_product(data)
   #pusher.trigger('todo', 'item-added', data) # trigger `item-added` event on `todo` channel
   return {}
