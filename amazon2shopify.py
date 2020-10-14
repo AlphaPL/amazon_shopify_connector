@@ -33,21 +33,20 @@ def get_products(region, marketplace, pageNum, prodname):
     if(i['ReportType']['value'] == '_GET_MERCHANT_LISTINGS_ALL_DATA_') and 'GeneratedReportId' in i:
       report_id = i['GeneratedReportId']['value']
       break
-  print()
   report_lines = ((orders_api.get_report(report_id).parsed).decode('latin1').split('\n'))
   columns = {}
   for idx, column in enumerate(report_lines[0].strip().split('\t')):
     columns[idx] = column.strip().replace('\ufeff','')
   records = []
-  if prodname == '':
-    for i in report_lines[(pageNum-1)*10+1:pageNum*10]:
-      print(i)
+  if prodname == '' or prodname =='undefined':
+    for i in report_lines[1:]:
       record = {}
       if i:
         for idx, j in enumerate(i.split('\t')):
           record[columns[idx]] = j.strip().replace('\ufeff','')
         record['SmallImage'] = products_api.get_matching_product(marketplace, [record['asin1']]).parsed['Product']['AttributeSets']['ItemAttributes']['SmallImage']['URL']['value']
         record['handle'] =  ''.join(([c for c in record['item-name'].lower() if c.isalnum()])) 
+
         record['in-shopify'] = bool(get_prod_id(record))
         data = get_prod(record)
         if data and '|' in data['title']:
@@ -103,19 +102,23 @@ def fetch_report():
 
 def get_prod_id(data):
       r = requests.get("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products.json")
-      for pro in r.json()['products']:
-        if pro['handle'] == data['handle']:
-          return pro['id']
-      return False
+      try:
+        for pro in r.json()['products']:
+          if pro['handle'] == data['handle']:
+            return pro['id']
+      except:
+        return False
 
 
 
 def get_prod(data):
       r = requests.get("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products.json")
-      for pro in r.json()['products']:
-        if pro['handle'] == data['handle']:
-          return pro
-      return False
+      try:
+        for pro in r.json()['products']:
+          if pro['handle'] == data['handle']:
+            return pro
+      except:
+        return False
 
 def update_variant(data, country):
   print('Updating variant for', data, country)
@@ -135,11 +138,14 @@ def create_product(data):
       url = data['SmallImage']
       url = url[:url.rfind('.')]
       url = url[:url.rfind('.')]
+      description = "No description"
+      if "description" in data and 'short_description' in data['description'] and data['description']['short_description']:
+        description = data['description']['short_description']
       url = url+".jpg"
       payload =   {"product": {
         "title": data['item-name'] +" | Available " + data['restock-date'] if 'restock-date' in data and data['quantity'] == '' else data['item-name'],
         "handle": data['handle'],
-        "body_html": data['description']['short_description'] + 
+        "body_html":  description + 
         '<button type="submit" onclick="window.location.href=\'https://www.amazon.co.uk\\/s?k=' + '+'.join(data['item-name'].split(' '))+ '&me=A3TUGG788NOEF7\'" class="btn product-form__cart-submit" data-add-to-cart="">'
                 '<span data-add-to-cart-text="">' +
                     'Buy on my Amazon Store' +
@@ -166,15 +172,13 @@ def create_product(data):
         print(data['item-name'], 'Exists! Updateing')
         r = requests.put("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products/"+str(get_prod_id(data))+".json", json=payload, headers=headers)
         import time
-        time.sleep(5)
-        update_variant(get_prod(data), data['country_of_origin'])
+        #update_variant(get_prod(data), data['country_of_origin'])
       else:
         print(data['item-name'], 'Not Exists! Sending new')
         r = requests.post("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products.json", json=payload, headers=headers)
         for i in range(5):
           r = requests.put("https://11141a688940e4c4c90d53906ec7ec3a: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@clear-clavio-store.myshopify.com/admin/api/2020-07/products/"+str(get_prod_id(data))+".json", json=payload, headers=headers)
         import time
-        time.sleep(5)
-        update_variant(get_prod(data), data['country_of_origin'])
+        #update_variant(get_prod(data), data['country_of_origin'])
 
 #create_product()

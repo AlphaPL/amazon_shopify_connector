@@ -38,6 +38,7 @@
 </div>
     <button id="prevPage"> Prev Page </button>
     <button id="nextPage"> Next Page</button>
+    <button id="impall"> Import all on this page</button>
     <input type="text" id="name" placeholder="Type in specific product"> </input>
     <section>
       <table class="styled-table">
@@ -167,6 +168,13 @@
           console.log(e)
           var strUser = e.options[e.selectedIndex].value;
           fetchProducts(strUser, pageNum)
+        }
+
+        document.getElementById("impall").onclick = function(ev) {
+          var inputs = document.getElementsByClassName('button1');
+          for (var i = 0; i < inputs.length; i++) {
+            inputs[i].click();
+          }
         }
 
         document.getElementById("name").onchange = function(ev) {
